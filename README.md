@@ -1,4 +1,8 @@
 ## Spring learing 
+# Table of contents
+1. [What is Spring?](# What is Spring?)
+2. 
+
 
 # What is Spring?
 The Spring framework is an open-source Java application framework, which is based on two key principles: dependency injection and Inversion of Control. Spring has the ability to autowire the dependency at run time, which allows the developer to write loosely coupled code.
@@ -140,4 +144,47 @@ The basic version of the Spring IoC container is bean factory. It is the legacy 
 Application context adds more features to the bean factory that are typically needed by an enterprise application. It is the most important part of the Spring framework. All the core logic of Spring happens here. It includes basic management of beans and wiring of dependencies as provided by the bean factory.
 
 # Spring Architechture 
+
+Spring framework is made of multiple modules which are grouped together in layers as shown below.
+its built in modular way which enables developer to choose specific module instead of using a whole framework. 
+## Spring modules 
 ![SpringFramework Architechture](https://github.com/gauravjnigam/gnSpring/blob/master/docs/SpringFrameworkArch.png)
+
+
+### Spring core container 
+this contains Beans, Core, Context, and Spring Expression Language (SpEL). These modules provide fundamental functionality of the Spring framework, like Inversion of Control (IoC), dependency injection, internationalization as well as support for querying the object at run time.
+
+### Data access / integration 
+Spring has very good integration with data and integration layers, and provides support to interact with databases. It contains modules like JDBC, ORM, OXM, JSM, and Transactions.
+* The JDBC (Java Database Connectivity) module allows the data layer to interact with databases to get data or store data, or to interact with other systems without the need of cumbersome JDBC coding. Spring JDBC is very straightforward as compared to plain JDBC and makes the code very short.
+
+* The ORM (Object Relational Mapping) module provides support to integrate with ORM frameworks including Hibernate and JPA.
+
+* The JMS (Java Messaging Service) module talks to other applications through the queue to produce and consume messages.
+
+* The OXM (object-XML mapping) module makes the object-to-XML transformation easy by providing useful features.
+
+* The transaction management module provides support for successful rollback in case a transaction fails.
+
+### Spring Web 
+It contains the Web, Servlets, Portlets, and Sockets modules to support the creation of a web application. Spring offers a web framework of its own called Spring MVC.
+
+### Test
+The Test module handles the cross cutting concern of unit testing. The Spring Test framework supports testing with JUnit, TestNG, as well as creating mock objects for testing the code in isolation.
+
+### AOP 
+The AOP Module provides the Aspect oriented programming functionality to address cross cutting concerns like security, logging in application. 
+Spring has its own module i.e Spring AOP which provides basic aspect oriented programming functionality. This can be integrated with AspectJ to achieve advanced AOP features.
+
+# Spring Project 
+Sr No. | Project | Description |
+--- | --- | --- |
+1 | Spring Boot | used to develop micro services, it provides nice features like startup project, auto configuration, actuator etc  |
+2 | Spring Cloud | used to develop cloud native application that can be dynamically configured and deployed. Provide common pattern used in distributed system  |
+3 | Spring Data | used to access SQL  and NoSQL database |
+4 | Spring Integration | it allows enterprise applications to be connected easlity using messaging  |
+5 | Spring Batch | used to handle large volumes of data and functionality like ability to restart, ability to read from and write to different systems, chunk processing, parallel processing, and transaction management. |
+6 | Spring Security | provides authentication and authorization features |
+7 | Spring Session  | supports multiple sessions in a single browser instance, manages session information and makes it easeir to share session data between services in the cloud regardless of the platform/container.  |
+8 | Spring Mobile | offers device detection and progressive rendering options that make mobile web application development easy. |
+9 | Spring Android | facilitates the development of Android applications |
