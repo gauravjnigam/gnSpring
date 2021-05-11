@@ -36,6 +36,7 @@ Tightly coupled code involves creating an instance of the dependency inside the 
       public class DependencyOption2 {
           //...
       }
+      
  ---------------------------------------------------------------------------------------
  
  Problems can arise when we want to use a different option for the dependency. Suppose if we ClassA wants to rely on different dependency
@@ -43,6 +44,7 @@ Tightly coupled code involves creating an instance of the dependency inside the 
  
  ## Loose coupling 
 A better way would be to implement an interface. This will remove the direct instantiation of the DependencyOption, and instead, ask for the type of filter as an argument to the constructor.
+
  ---------------------------------------------------------------------------------------
       interface DepedencyOption {
           //method definitions
@@ -60,6 +62,7 @@ A better way would be to implement an interface. This will remove the direct ins
 
           //...
       }
+      
  ---------------------------------------------------------------------------------------
 
 This way ClassA is not dependent on a specific type of dependency and can be used with both a DependencyOption1 and DependencyOption2. The above code snippet is an example of loosely coupled code. Loose coupling has a number of advantages.
@@ -80,6 +83,7 @@ The Spring framework take cares of writing the above code on its own. Spring cre
 public class ClassA {
 
 }
+
 ---------------------------------- 
 
 3. Autowiring
@@ -98,6 +102,7 @@ class ClassA(){
 class DependencyOption1 implements Dependency {
 
 }
+
 ---------------------------------- 
 
 5. Dependency injection
@@ -113,6 +118,7 @@ class ClassA{
     private DependencyOption1 dependency1 = new DependencyOption1();
     //...
 }
+
 ---------------------------------- 
 
 Spring takes this responsibility from the class and creates the object itself. The developer simply mentions the dependency and the framework takes care of the rest.
@@ -123,6 +129,7 @@ class ClassA{
     private Dependency dependency;
     //...
 }
+
 ---------------------------------- 
 
 control moves from the component that needs the dependency to the framework. The framework takes the responsibility for finding out the dependencies of a component, ensuring their availability and injecting them in the component. This process is called Inversion of Control.
