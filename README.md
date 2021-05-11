@@ -140,4 +140,4 @@ The basic version of the Spring IoC container is bean factory. It is the legacy 
 Application context adds more features to the bean factory that are typically needed by an enterprise application. It is the most important part of the Spring framework. All the core logic of Spring happens here. It includes basic management of beans and wiring of dependencies as provided by the bean factory.
 
 # Spring Architechture 
-![alt text](https://github.com/gauravjnigam/spring-example/5337857607073792.svg)
+![SpringFramework Architechture](https://github.com/gauravjnigam/gnSpring/blob/master/docs/SpringFrameworkArch.png)
