@@ -1,8 +1,4 @@
 ## Spring learing 
-# Table of contents
-1. [What is Spring?](# What is Spring?)
-2. 
-
 
 # What is Spring?
 The Spring framework is an open-source Java application framework, which is based on two key principles: dependency injection and Inversion of Control. Spring has the ability to autowire the dependency at run time, which allows the developer to write loosely coupled code.
@@ -188,3 +184,15 @@ Sr No. | Project | Description |
 7 | Spring Session  | supports multiple sessions in a single browser instance, manages session information and makes it easeir to share session data between services in the cloud regardless of the platform/container.  |
 8 | Spring Mobile | offers device detection and progressive rendering options that make mobile web application development easy. |
 9 | Spring Android | facilitates the development of Android applications |
+
+# Advantages 
+* Flexibility and support of integration with other framework <br />
+      Spring modules are not dependent on one another and offer a developer the freedom to pick and choose according to the requirements of the application.
+      Spring offers its own MVC framework, SpringMVC, it also offers integration with other MVC frameworks. 
+* Removes plumbing code  <br />
+      Spring removes plumbing code and lets the programmer focus on the application logic.
+* Promotes testable code <br />
+      Spring framework enables writing testable code. It offers good integration with JUnit and Mockito frameworks, which lets us write unit tests quickly and easily. The core feature of Spring is dependency injection and if it is used properly, writing unit tests for the code becomes very easy.
+* Up to date and adopt lateset technology trends  <br />
+      Spring is able to stay current and adapt to changes in development. For example, microservices and cloud services have evolved in the last decade. Spring has come up with projects to keep up with the trend, like Spring Boot, which helps with designing microservices
+
