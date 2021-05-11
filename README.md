@@ -25,7 +25,6 @@ A typical application has a lot of classes and dependencies
 ## Tight coupling 
 Tightly coupled code involves creating an instance of the dependency inside the class
  
- ---------------------------------------------------------------------------------------
       public class ClassA {
           DependencyOption1 dependency1 = new DependencyOption1();
           //...
@@ -37,15 +36,13 @@ Tightly coupled code involves creating an instance of the dependency inside the 
           //...
       }
       
- ---------------------------------------------------------------------------------------
  
  Problems can arise when we want to use a different option for the dependency. Suppose if we ClassA wants to rely on different dependency
  This entails changing the code of ClassA, which would be a disadvantage of using tightly coupled code.
  
  ## Loose coupling 
 A better way would be to implement an interface. This will remove the direct instantiation of the DependencyOption, and instead, ask for the type of filter as an argument to the constructor.
-
- ---------------------------------------------------------------------------------------
+ 
       interface DepedencyOption {
           //method definitions
       }
@@ -62,8 +59,6 @@ A better way would be to implement an interface. This will remove the direct ins
 
           //...
       }
-      
- ---------------------------------------------------------------------------------------
 
 This way ClassA is not dependent on a specific type of dependency and can be used with both a DependencyOption1 and DependencyOption2. The above code snippet is an example of loosely coupled code. Loose coupling has a number of advantages.
 
@@ -74,63 +69,52 @@ The Spring framework take cares of writing the above code on its own. Spring cre
 # Spring History 
 
 # Spring terminology 
-1. Beans
+### Beans
    Beans are the objects of classes that are managed by Spring.
    Spring manages all the dependencies of an object and instantiates the object after injecting the required dependencies. The @Component annotation is the most common method of defining beans.
    
----------------------------------- 
-@Component
-public class ClassA {
+      @Component
+      public class ClassA {
 
-}
+      }
 
----------------------------------- 
 
-3. Autowiring
+### Autowiring
 its a process of identifying the dependency, looking for match and populating the dependency. 
 Spring uses @Autowire annotation to find the dependency and inject into other bean. Spring throws error if it finds more then one dependency unless developer explicitly defines it. 
 
----------------------------------- 
-@Component
-class ClassA(){
-    @Autowired
-    private Dependency dependency;
-    //...
-}
+      @Component
+      class ClassA(){
+          @Autowired
+          private Dependency dependency;
+          //...
+      }
 
-@Component
-class DependencyOption1 implements Dependency {
+      @Component
+      class DependencyOption1 implements Dependency {
 
-}
+      }
 
----------------------------------- 
-
-5. Dependency injection
+### Dependency injection
 Dependency injection is the process of looking up the beans that are needed for a specific bean to function and injects them as a dependency. Spring can perform dependency injection by using constructor or by using a setter method.
 
-7. Inversion of control
+### Inversion of control
 
 Traditionally, the class which needed the dependency created an instance of the dependency. The class decided when to create the dependency and how to create it. For example, DependencyOption1 class is a dependency of ClassA class, which creates its object:
 
----------------------------------- 
-class ClassA{
-  
-    private DependencyOption1 dependency1 = new DependencyOption1();
-    //...
-}
+      class ClassA{
 
----------------------------------- 
+          private DependencyOption1 dependency1 = new DependencyOption1();
+          //...
+      }
 
 Spring takes this responsibility from the class and creates the object itself. The developer simply mentions the dependency and the framework takes care of the rest.
 
----------------------------------- 
-class ClassA{
- 
-    private Dependency dependency;
-    //...
-}
+      class ClassA{
 
----------------------------------- 
+          private Dependency dependency;
+          //...
+      }
 
 control moves from the component that needs the dependency to the framework. The framework takes the responsibility for finding out the dependencies of a component, ensuring their availability and injecting them in the component. This process is called Inversion of Control.
 
@@ -138,7 +122,7 @@ control moves from the component that needs the dependency to the framework. The
       ----------------------------------------             ----------------------------------------
        ClassA ----creates------> Dependency               ClassA <----Injects------ Dependency 
 
-9. IoC container 
+### IoC container 
 
 An IoC container is a framework that provides the Inversion of Control functionality. The IoC container manages the beans. For the above mentioned example, it creates an instance of the Dependency class, then creates an instance of ClassA class, and then injects the Dependency object as a dependency into the ClassA object.
 
@@ -149,8 +133,8 @@ Spring offers two implementations of the IoC container:
 
 Both of them are interfaces that have different implementations available. Application context is the typical IoC container in the context of Spring. Spring recommends using it unless there is a memory concern, like in a mobile device. If available memory is low, bean factory should be used.
 
-10. Bean factory
+### Bean factory
 The basic version of the Spring IoC container is bean factory. It is the legacy IoC container and provides basic management for beans and wiring of dependencies. In Spring, bean factory still exists to provide backward compatibility.
 
-12. Application context
+### Application context
 Application context adds more features to the bean factory that are typically needed by an enterprise application. It is the most important part of the Spring framework. All the core logic of Spring happens here. It includes basic management of beans and wiring of dependencies as provided by the bean factory.
