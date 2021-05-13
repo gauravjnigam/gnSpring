@@ -196,3 +196,28 @@ Sr No. | Project | Description |
 * Up to date and adopt lateset technology trends  <br />
       Spring is able to stay current and adapt to changes in development. For example, microservices and cloud services have evolved in the last decade. Spring has come up with projects to keep up with the trend, like Spring Boot, which helps with designing microservices
 
+# Spring basics
+
+## Creating a Project
+Earlier building a new spring project was quite hard, we had to decide all maven dependency to use, 
+set up the configuration for xml or java, install the tomcat server etc. 
+
+Spring boot comes up with very good new feature and quick setup to start new project. 
+Spring boot is actually a spring framework along with embedded servers. it removes the need for 
+XML Configuration. 
+
+    Spring Boot ===> Spring Framework  + Embedded server - Manual configuration
+
+Spring initializr can be used to create a spring boot project , where we can simply select the dependencies and create
+a basic project structure with maven/gradle build specification. project can be downloaded a zip and can be imported in 
+different IDEs like Eclipse or Intellij etc
+
+When the import process finishes, the following hierarchy can be seen:
+
+* src/main/java where the Java code will be written.
+* src/main/resources where the application properties are written.
+* src/test/java where the tests will be written.
+
+The Maven Dependencies folder lists all the dependencies. Spring has automatically been added as a dependency. Spring-boot, spring-context, spring-beans, and spring-core can also be seen among other dependencies autowired by the Spring Initializr.
+
+
