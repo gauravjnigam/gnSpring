@@ -1,21 +1,22 @@
 package com.gn.springbasics.mrs;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
+@Component
 public class RecommenderImplementation {
 
     //use filter interface to select filter
+    @Autowired
+    @Qualifier("CF")
     private Filter filter;
-
-    public RecommenderImplementation(Filter filter) {
-        super();
-        this.filter = filter;
-    }
 
     //use a filter to find recommendations
     public String [] recommendMovies (String movie) {
 
         //use content based filter to find similar movies
 
-        ContentBasedFilter filter = new ContentBasedFilter();
         String[] results = filter.getRecommendations("Finding Dory");
 
         //return the results

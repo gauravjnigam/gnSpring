@@ -220,4 +220,208 @@ When the import process finishes, the following hierarchy can be seen:
 
 The Maven Dependencies folder lists all the dependencies. Spring has automatically been added as a dependency. Spring-boot, spring-context, spring-beans, and spring-core can also be seen among other dependencies autowired by the Spring Initializr.
 
+# Managing Beans and Dependency 
 
+we have created objects of RecommenderImplementation class and two classes implementing the Filter interface. We are binding the objects together in the constructor. Our code is now loosely coupled as we are passing the name of the filter to be used as a constructor argument.
+
+Spring automates the above process of creating objects and binding them together. It takes the responsibility of creating instances of classes and binding instances based on their dependencies. The instances or objects that Spring manages are called beans. To manage objects and dependencies, Spring requires information about three things:
+
+* Beans
+* Dependencies
+* Location of beans
+
+Spring uses annotation for managing beans and its dependency
+#### @Component
+- using this would let Spring create and manage objects
+  we want Spring to manage objects of RecommenderImplementation and ContentBasedFilter only, so we will add the @Component annotation at two places in the code:
+  
+        import org.springframework.stereotype.Component;
+        
+        @Component
+        public class RecommenderImplementation {
+        //…
+        }
+
+        import org.springframework.stereotype.Component;
+        
+        @Component
+        public class ContentBasedFilter implements Filter {
+        //…
+        }
+The Spring container will have two beans, one of type <I>RecommenderImplementation</I> and the other of type <I>ContentBasedFilter</I>.
+![img_1.png](docs/SpringBeansDependency.png)
+#### @Autowired
+- Now Spring needs to know is the dependencies of each object. 
+  The @Autowired annotation is used for this purpose
+  
+  In our application, the <I>ContentBasedFilter</I> class is a dependency of the <I>RecommenderImplementation</I> class.
+
+        import org.springframework.stereotype.Component;
+        import org.springframework.beans.foctory.annotation.Autowired;
+        
+        @Component
+        public class RecommenderImplementation {
+        
+            @Autowired
+            private Filter filter;
+            // ...
+        }
+
+The @Autowired annotation tells Spring that <I>RecommenderImplementation</I> needs an object of type Filter. 
+In other words, <I>Filter</I> is a dependency of <I>RecommenderImplementation</I>.
+
+![img.png](docs/SpringBeans.png)
+
+#### @ComponentScan
+Now, Spring requires from the developer is the location of the beans so that it can find them and autowire the dependencies
+The @ComponentScan annotation is used for this purpose. This annotation can be used with or without arguments. It tells Spring to scan a specific package and all of its subpackages. In our case, all the files that contain beans are in the same package, com.gn.springbasics, so we want Spring to do a component scan on this package.
+
+Since we are using Spring Boot, 
+it uses the @SpringBootApplication annotation in the MovieRecommenderSystemApplication file. 
+This annotation is equivalent to the following three annotations:
+* <B>@Configuration</B>, which declares a class as the source for bean definitions
+* <B>@EnableAutoConfiguration</B>, which allows the application to add beans using classpath definitions
+* <B>@ComponentScan</B>, which directs Spring to search for components in the path specified
+
+        @SpringBootApplication = #Configuration + @EnableAutoConfiguration + @ComponentScan
+
+#### @SpringBootApplication
+this tells Spring to scan all the files in the package where the class with this annotation is present. 
+It also scans any sub-packages of the package where it is placed.
+
+When we use the above mentioned annotations, the following line in our code becomes redundant as it is automatically done by Spring:
+
+        RecommenderImplementation recommender = new RecommenderImplementation(new ContentBasedFilter());
+
+The beans that Spring creates are managed by the Application Context. 
+We can get information about a bean from the Application Context. 
+The run method returns the ApplicationContext, which can be assigned to a variable appContext. 
+Then the getBean method of ApplicationContext can be used to get the bean of a particular class. 
+We will create a local variable recommender and assign the bean to it as follows:
+
+        ApplicationContext appContext = SpringApplication.run(MovieRecommenderSystemApplication.class, args);
+        
+        RecommenderImplementation recommender = appContext.getBean(RecommenderImplementation.class);
+        
+        String[] result = recommender.recommendMovies("ABC");
+
+Instead of us having to create an instance of the RecommenderImplementation class, Spring Application Context creates the beans. We can simply pick it up from there and use it to execute the RecommendMovies method.
+
+This might look complex to a beginner, but consider for a moment an application that has hundreds of beans, each having a number of dependencies. The fact that we do not have to explicitly create beans and manually wire in the dependencies makes the job of a developer very easy.
+
+
+To understand what goes on in the background, we will run the application in debug mode. 
+This can be done by changing the <I>application.properties</I> file in <I>src/main/resources</I>.
+
+        Logging.level.org.springframework = debug
+
+A summary of the actions is reproduced below:
+* Loading source class...<br>
+  The package is being searched. Spring starts with a component scan to find anything with @Component as well as other annotations
+  
+* Identified candidate component class...<br>
+  Spring identifies two candidates which have the @Component annotation as we only used it in two places in our code.
+  
+* Creating shared instance...<br>
+  Spring starts creating instances of the beans. 
+  It creates beans that do not have any dependency first.<br>
+  
+      Creating shared instance of singleton bean 'movieRecommenderSystemApplication'
+      Creating shared instance of singleton bean 'contentBasedFilter'
+  
+* Now Spring can autowire the dependency using the constructor that we have provided and creates the RecommenderImplementation bean.
+        
+        Creating shared instance of singleton bean 'recommenderImplementation'
+        Autowiring by type from bean name 'recommenderImplementation' via constructor to bean named 'contentBasedFilter'
+
+To better understand these annotations, play around with the code below and see what error messages Spring throws when some of the annotations are missing. The error message can be found at the end of the log.
+
+
+## Autowire in-depth By Type : @Primary
+
+In the last lesson, we saw Spring manage two beans of the RecommenderImplementation and ContentBasedFilter classes for us. In this lesson, we will add another bean and see how Spring can dynamically choose a bean if it finds two matches of the same type.
+
+1. Add the @Component annotation on the CollaborativeFilter class to declare it a bean. Now both implementations of the Filter interface are beans. Previously, when Spring searched for a dependency to be autowired in the RecommenderImplementation object, it only found one bean of matching type. Now when we run the application, it fails to start.
+![img.png](docs/SpringDependencyConflicts.png)
+
+        org.springframework.beans.factory.NoUniqueBeanDefinitionException: No qualifying bean of type 'com.gn.springbasics.mrs.Filter' available: expected single matching bean but found 2: collaborativeFilter,contentBasedFilter
+        
+        Parameter 0 of constructor in com.gn.springbasics.mrs.RecommenderImplementation required a single bean, but 2 were found:
+        - collaborativeFilter: defined in file [C:\Users\Anuja\IdeaProjects\spring-example\movie-recommender-system\target\classes\com\gn\springbasics\mrs\CollaborativeFilter.class]
+        - contentBasedFilter: defined in file [C:\Users\Anuja\IdeaProjects\spring-example\movie-recommender-system\target\classes\com\gn\springbasics\mrs\ContentBasedFilter.class]
+        
+        Action:
+        Consider marking one of the beans as @Primary, updating the consumer to accept multiple beans, or using @Qualifier to identify the bean that should be consumed
+
+2. One way Spring can choose between two beans of the same type is by giving one bean priority over the other. The @Primary annotation is used for making a component the default choice when multiple beans of the same type are found.
+   Using @Primary is called autowiring by type. We are looking for instances of type Filter.
+   
+3. If we make both beans primary by adding the @Primary annotation to both implementations of the Filter interface, we will get an error, This happens because Spring doesn't know which one to inject in the RecommenderImplementation object. The error message states “more than one 'primary' bean found among candidates: [collaborativeFilter, contentBasedFilter]”.
+
+## Autowire in-depth By Name 
+Let's look at another autowiring approach known as autowiring by name and see which approach has higher priority; by name or by type.
+
+Another approach is autowiring by name where we specify the bean that is to be used by name. In this approach, while creating an object, the dependency is injected by matching the name of the reference variable to the bean name. The developer has to ensure that the variable name is the same as its bean name.
+1. We will begin by omitting the @Primary annotation from the CollaborativeFilter class. Now to let Spring know which bean to use, change the variable name in the RecommenderImplementation class to match the bean name as follows:
+
+        @Autowired
+        private  Filter contentBasedFilter;
+
+Now when the application is run, it chooses the ContentBasedFilter bean for autowiring. When Spring finds two beans of the same type (Filter), it determines that the bean to inject is the one whose name matches the one used with the @Component annotation for that bean. In other words, the variable name (contentBasedFilter) matches the bean name (ContentBasedFilter).
+
+2. As an exercise, let’s see what happens if the bean name and variable names are different. Let's change the name of the variable to filterObj.
+
+When the application is run, autowiring does not take place.
+
+3. We have seen two autowiring approaches so far. To see which autowiring approach takes precedence, we will use the @Primary annotation on ContentBasedFilter class and use autowiring by name by changing the name of the variable of type Filter in RecommenderImplementation class to collaborativeFilter.
+   The application chooses a content-based filter, showing that @Primary has a higher priority.
+
+This is because @Autowired annotation tries to resolve dependency by type first. If it fails to resolve a conflict and finds more than one bean of the same type then it tries to resolve it by name.
+
+The autowiring by name approach is advantageous when we want to use one bean in one situation and another bean in some other situation. Using @Primary will always give preference to one bean, which is impractical if we want to use different beans in different scenarios.
+
+## Autowiring In-depth: @Qualifier
+Let's examine the @Qualifier annotation for autowiring and compare it to @Primary.
+
+### @Qualifier
+Like @Primary, the @Qualifier annotation gives priority to one bean over the other if two beans of the same type are found. The bean with the @Qualifier annotation qualifies to be injected as a dependency. The @Qualifier annotation can be used in a scenario when we have multiple objects of the same type and autowiring by name cannot be used because the variable name doesn't match any bean name.
+
+1. We will use the name CBF for ContentBasedFilter. Add the @Qualifier annotation in two places, the RecommenderImplementation class where the dependency is defined, and the ContentBasedFilter class.
+
+        @Autowired
+        @Qualifier("CBF")
+        private  Filter filter;
+   
+        ..............
+   
+        @Component
+        @Qualifier("CBF")
+        public  class ContentBasedFilter implements Filter{
+        //...
+        }
+
+2. We can add the @Qualifier annotation on the CollaborativeFilter class too. Let’s give this bean the name CF.
+
+        @Autowired
+        @Qualifier("CF")
+        private  Filter filter;
+   
+        ....................
+   
+        @Component
+        @Qualifier("CF")
+        public  class CollaborativeFilter implements Filter{
+        //...
+        }
+
+This time, the CollaborativeFilter bean qualifies to be autowired. Depending upon which filter is required in a given scenario, we can change the @Qualifier annotation in the RecommenderImplementation class.
+
+### Comparison with @Primary 
+The @Qualifier annotation takes precedence over the @Primary annotation. 
+
+@Primary annotation should be used if there is one clear favorite to be used in a majority of situations. In some cases, one algorithm might be more efficient or more important than the rest and is declared as the primary choice. The bean with @Primary gets chosen unless another bean is required, which can be specified with @Qualifier. The bean with @Qualifier is only used to request an "alternate" bean in case the primary choice is not required.
+
+@Autowired annotation resolves dependencies by type. If there are more than one beans of the same type, a conflict arises. We have seen three different approaches to resolve conflicts. They can be resolved using the @Primary annotation, renaming the variable to match the name of the class, or by using the @Qualifier annotation
+
+
+## Constructor and Setter Injection
