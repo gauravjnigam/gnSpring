@@ -798,3 +798,35 @@ After making these changes, we are able to run the same application without usin
 
         appContext.close();
 
+# XML Configuration with Java Annotations
+* In the last lesson, we removed all Java annotations from our application and used the appContext.xml file to define beans and inject the dependency. However, if we want to detect beans defined by the @Component annotation while using XML context, we can do that too.
+* In large projects, declaring a lot of beans using the <bean> tag proved to be cumbersome, so annotation-based dependency injection was introduced in Spring 2.5. This enabled automatic detection of beans having the @Component annotation.
+* The tag <context:component-scan> is used to turn this feature on and off.
+
+## component-scan tag for @Component 
+* Suppose we want the XML context to read any bean(e.g. Movie bean) defined in the different package. 
+For that, we need to trigger a component scan on the package. We can define a component scan in XML context using the context:component-scan tag.
+
+* To be able to use this tag, we will define a new schema and provide a shortcut name for it as context. By default, any tag that is used without any namespace (like <bean>) belongs to the default schema, which is http://www.springframework.org/schema/beans. We need to define the schema location for the context namespace.
+        
+        1.<beans xmlns="http://www.springframework.org/schema/beans"
+        2. xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        3. xmlns:context="http://www.springframework.org/schema/context"
+        4. xsi:schemaLocation="http://www.springframework.org/schema/beans
+        5.                     http://www.springframework.org/schema/beans/spring-beans.xsd
+        6.                     http://www.springframework.org/schema/context
+        7.                     http://www.springframework.org/schema/context/spring-context.xsd">
+        
+
+* Now, we can use the tag context:component-scan and provide the location of the package to be searched as follows:
+
+        <context:component-scan
+                base-package = "com.gn.springbasics.mrs.exp13"
+                use-default-filters = "false">
+                <context:include-filter type = "regex"
+                expression = "com.gn.springbasics.mrs.exp13.*vie"/>
+        </context:component-scan>
+
+* By default, Spring will scan everything marked with @Component as well as the @Controller, @Repository, and @Service annotation. 
+* We have turned off the default behaviour by using use-default-filters="false". Next, the include-filter is used with a REGEX expression that will only match the Movie class.
+
