@@ -33,5 +33,7 @@
 	</dependencies>
     <modules>
         <module>movie-recommender-system</module>
+        <module>movie-recommended-system-spring-core</module>
+        <module>movie-recommender-system-spring-xml</module>
     </modules>
 </project>

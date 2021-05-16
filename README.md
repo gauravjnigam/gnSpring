@@ -425,3 +425,376 @@ The @Qualifier annotation takes precedence over the @Primary annotation.
 
 
 ## Constructor and Setter Injection
+
+So far we have learnt that Spring framework identifies dependencies and wires them in. Spring framework gives the developer control over how beans are wired in. There are a variety of options to choose from. We will focus on constructor injection and setter injection.
+
+To show the two different ways of dependency injection, we will create a copy of the RecommenderImplementation class and call it RecommenderImplementation2. One will be used to show constructor injection while the other will demonstrate setter injection.
+
+We will move the @Autowired annotation to the constructor or setter method to direct Spring which one to use.
+
+1. We have a constructor in the RecommenderImplementation class that initializes the filter to be used for finding movie recommendations. Autowiring the dependency using a constructor is called constructor injection.
+   
+        @Autowired
+        @Qualifier("collaborativeFilter")
+        public RecommenderImplementation( Filter filter) {
+        //...
+        }
+Adding the @Qualifier annotation to the constructor like above results in an error message that says, “The annotation @Qualifier is disallowed for this location”. To resolve this error, we will move the @Qualifier annotation to the argument list of the constructor and put it right in front of the property that we want to be autowired.
+
+Adding the @Qualifier annotation to the constructor like above results in an error message that says, “The annotation @Qualifier is disallowed for this location”. To resolve this error, we will move the @Qualifier annotation to the argument list of the constructor and put it right in front of the property that we want to be autowired.
+
+        @Autowired
+        public RecommenderImplementation(@Qualifier("collaborativeFilter") Filter filter) {
+        //...
+        }
+
+When the application is run, Spring injects the CollaborativeFilter bean in the RecommenderImplementation class using the constructor. 
+We get the “constructor invoked…” message.
+
+2. Another way to wire in a dependency is by using a setter method. We will create a setter method in the RecommenderImplementation2 class called setFilter as follows:
+  
+        public void setFilter(Filter filter) {
+        this.filter = filter;
+        System.out.println("Setter method invoked..");
+        }
+
+When the application is run, Spring injects the ContentBasedFilter bean in the RecommenderImplementation2 class using the setFilter method. The “setter invoked…” message is also displayed.
+
+3. We have seen two dependency injection methods above but Spring can inject dependencies even without a constructor or setter. This is called field injection.
+
+        public class RecommenderImplementation {
+        @Autowired
+        private Filter filter;
+        
+            //...    
+        }
+
+
+Using field injection, on one hand, keeps the code simple and readable in the absence of plumbing code, but on the other hand, 
+it is unsafe because Spring can set private fields of the objects. 
+Testing can become inconvenient because we need a way to perform dependency injection for testing. 
+Another disadvantage is that a developer may add a lot of optional dependencies which can make the application complex. 
+If there was a constructor, then each additional dependency would result in increasing the number of arguments of the constructor.
+
+### Difference in constructor and setter injection 
+- Setter injection is more readable as it specifies the name of the dependency as the method name
+- if the number of setter methods increases then it increases the boiler plate code.
+- Setter injection is used to <B>avoid</B> the <I>BeanCurrentlyInCreationException</I> raised in case of a circular dependency, because unlike constructor injection where dependencies are injected at the time when context is loaded, setter injection injects dependencies when they are needed.
+- Constructor injection ensures that all dependencies are injected because an object cannot be constructed until all its dependencies are available. It also ensures immutability as the state of the bean cannot be modified after creation
+
+
+# Bean scope 
+The Spring container manages beans. The term bean scope refers to the lifecycle and the visibility of beans. It tells how long the bean lives, how many instances of the bean are created, and how the bean is shared.
+
+## Types of bean scopes
+There are six types of scopes: singleton, prototype, request, session, application, and websocket.
+
+![img.png](docs/beanScope.png)
+
+The singleton and prototype scopes can be used in any application while the last four scopes are only available for a web application. In this lesson, we will focus on singleton and prototype bean scopes only
+The default scope of a bean is singleton, in which only one instance of the bean is created and cached in memory. Multiple requests for the bean return a shared reference to the same bean. In contrast, prototype scope results in the creation of new beans whenever a request for the bean is made to the application context.
+
+In our movie recommendation system example, we have two implementations of the Filter interface, namely ContentBasedFilter and CollaborativeFilter. We will use them to show the differences between singleton and prototype bean scope.
+
+### Singleton
+
+Application context manages the beans and we can retrieve a bean using the getBean() method. If we request the application context for the ContentBasedFilter bean three times as shown, we get the same bean:
+
+        //Retrieve singleton bean from application context thrice
+        ContentBasedFilter cbf1 = appContext.getBean(ContentBasedFilter.class);
+        ContentBasedFilter cbf2 = appContext.getBean(ContentBasedFilter.class);
+        ContentBasedFilter cbf3= appContext.getBean(ContentBasedFilter.class);
+        
+        System.out.println(cbf1);
+        System.out.println(cbf2);
+        System.out.println(cbf3);
+
+As can be verified from the output, all beans are the same. The application context did not create a new bean when we requested it the second and third time. Rather, it returned the reference to the bean already created. Pictorially, it can be shown as follows:
+
+                                                SPRING
+        ContentBasedFilter cbf1  |         |                     |
+        ContentBasedFilter cbf2  |   ==>   |  ContentBaseFilter  |
+        ContentBasedFilter cbf3  |         |                     |
+
+Singleton bean scope is the default scope. It is used to minimize the number of objects created. Beans are created when the context is loaded and cached in memory. All requests for a bean are returned with the same memory address. This type of scope is best suited for cases where stateless beans are required. On the contrary, prototype bean scope is used when we need to maintain the state of the beans.
+
+### Prototype
+Now we will change the scope of the CollaborativeFilter bean from singleton to prototype. For this, we will use the @Scope annotation
+
+        //Option 1
+        @Scope(“Prototype”)
+        
+        //Option 2
+        @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+
+This time the application context will return three different objects. It will create a new object every time we invoke the getBean() method.
+
+
+                                                SPRING
+        ContentBasedFilter cbf1  |  ---->  |  ContentBaseFilter  |
+        ContentBasedFilter cbf2  |  ---->  |  ContentBaseFilter  |
+        ContentBasedFilter cbf3  |  ---->  |  ContentBaseFilter  |
+
+
+* Spring creates a singleton bean even before we ask for it while a prototype bean is not created till we request Spring for the bean. 
+* It is important to note that there is a difference between the Spring singleton and the Gang of Four (GoF) singleton design patterns. The singleton design pattern as specified by the GoF means one bean per JVM. However, in Spring it means one bean per application context.
+
+# Mixing Bean scope
+## Singleton bean with prototype dependency
+Now that we understand the concept of singleton and prototype bean scopes, we can move on to an interesting problem of mixing bean scopes. Sometimes, a bean has singleton scope but its dependency has prototype scope. An example is the content-based filter which recommends movies based on item-to-item similarity. Our basic implementation of the content-based filter compares different movies and assigns a similarity score. Hence, Movie is a dependency of the ContentBasedFilter class.
+
+The ContentBasedFilter bean has singleton scope because we need only one instance of the filter. However, the Movie bean has prototype scope because we need more than one object of this class.
+
+            Singleton                   Prototype
+                                    | ---> Movie
+        ContentBasedFilter -------> | ---> Movie
+                                    | ---> Movie
+
+Example - 
+1. The ContentBasedFilter class has a dependency on Movie class. It also has a getter method for the dependency (getMovie)
+2. The Movie class has variables for storing movie name, genre and producer, as well as a static member instances to maintain the global count of instances created. The variable instances is incremented in the constructor. The scope of the Movie class is prototype because we want multiple objects of this class in the ContentBasedFilter class.
+3. In the main method, we will get the ContentBasedFilter bean from the application context and then use it to retrieve the Movie bean thrice.
+4. The Movie bean has been injected in the ContentBasedFilter class using @Autowired annotation, but it does not yield desired results
+
+The same Movie bean is returned every time. Moreover, the number of instances of the prototype bean created is two as the Movie constructor is called twice. As mentioned in the previous lesson, a singleton bean is created when the context is loaded. The Movie constructor was called by Spring when it was creating the ContentBasedFilter bean using constructor injection. The prototype bean is injected into the singleton bean at the time of creation of the singleton bean when the container initializes it. This explains the following messages in the output:
+        
+        Movie constructor called        
+        ContentBasedFilter constructor called
+
+When a prototype bean is injected into a singleton bean, it loses its prototype behavior and acts as a singleton. The same instance of the bean is returned by the application context every time it is requested.
+
+The second "Movie constructor called" message is displayed because the prototype bean now acts as a singleton bean and Spring creates the bean at the time of initialization of the container, rather than when we request it for the bean
+
+         ------ContentBasedFilter---
+        |                           |
+        |                           |
+        |          Movie            |
+        |                           |
+        |                           |
+        |___________________________|
+
+## PROXY
+Right now, Spring cannot inject the prototype bean into the singleton bean after it has been created
+This problem can be solved in a number of ways. One of them is by using a proxy. We declare the bean with prototype scope as a proxy.
+
+    @Scope(value=ConfigurableBeanFactory.SCOPE_PROTOTYPE, proxyMode=ScopedProxyMode.TARGET_CLASS)
+
+The prototype bean doesn't get autowired into the singleton bean at the time of its creation. Instead, a proxy or placeholder object is autowired. The proxy adds a level of indirection. When the developer requests the prototype bean from Spring, a new instance of the prototype bean is created and is returned by the application context. The proxy mode allows Spring container to inject a new object into the singleton bean.
+
+         ------ContentBasedFilter---
+        |                           |
+        |                |----------|-----> Movie
+        |          Proxy |----------|-----> Movie
+        |                |----------|-----> Movie
+        |                           |
+        |___________________________|
+        Proxy injected in place of prototype bean
+
+As can be seen from the output, the singleton bean constructor is called when the ContentBasedFilter object is initialized, but the Movie constructor isn't called at that time. The Movie constructor is called whenever the getMovie() method is called.
+
+## Lookup
+Another method is by using the @Lookup annotation on the getMovie() method. This annotation tells Spring to return an instance of Movie type. It is essentially the same as beanFactory.getBean(Movie.class).
+
+One thing to consider is that singleton scope minimizes the number of objects created so the scope should only be changed where necessary. If there are more objects, there will be an impact on the memory used as well as on garbage collection
+
+
+# ComponentScan
+let's see how Spring searches for beans found in different packages.
+Spring does a component scan to search for the beans that it manages. In a Spring Application, the @ComponentScan annotation without any argument tells Spring to scan the current package as well as any sub-packages that might exist.
+
+In a Spring Boot application, this happens implicitly. The @SpringBootApplication annotation is a combination of three annotations:
+
+* @Configuration
+* @EnableAutoConfiguration
+* @ComponentScan
+
+@SpringBootApplication
+1. by default, searches the package as well as all the sub-packages where it is present.
+2. If a bean is present in a package other than the base package or its sub-packages, it will not be found. 
+3. If we want Spring to find beans defined in other packages, we need to use the @ComponentScan annotation and provide the path of the package where we want Spring to look for the beans.
+
+@ComponentScan
+this is used to guide Spring to search the package, where the dependent bean is present, 
+we need to add the @ComponentScan annotation and mention the path of the package:
+
+    @ComponentScan("com.gn.springbasics.mrs.exp09")
+
+This will let Spring detects the dependent bean in defined package only since we explicitly specified the package 
+to be searched.
+
+### Include and exclude filters 
+* @ComponetScan can be used to include or exclude certain packages from being scanned.
+* Exclude filters are used to stop Spring from auto-detecting classes in the component scan.
+* There are different types of filters that make use of custom annotations, interfaces, regular expressions, and AspectJ expressions.
+* Spring also allows the creation of custom filters, e.g., find only those beans whose names are a certain length
+* If we want Spring to detect multiple dependent beans, we can use the include filter of type REGEX and provide the path of the 
+  package where the differnet beans are present.
+
+    @ComponentScan(includeFilters = @ComponentScan.Filter (type= FilterType.REGEX , pattern="com.gn.springbasics.mrs.exp09.*"))
+
+* Our REGEX pattern will evaluate to all beans declared with @Component annotation in the exp09 package. 
+Now when the application is run, beans from two different packages(current package and exp09) are successfully detected.
+  
+# Bean lifecycle - @PostConstruct, @preDestroy
+Spring manages the entire lifecycle of beans from the time they are created till the time they are destroyed. 
+Two of the lifecycle callback methods are the 
+- post-initialization
+- pre-destruction methods
+
+## @PostConstruct
+* When Spring creates a bean, the first thing it does is autowire the dependencies. If the developer wants to perform a task after the dependencies have been populated, it can be done using the @PostConstruct annotation.
+* A method with this annotation works like the init method.
+* @PostConstruct tells Spring to call the method for us once the object has been created.
+* The method can have any name and its return type is always void
+* After the bean is created, we can initialize the contents of the bean, load data, establish a database connection, or connect to a web server.
+* The PostConstruct method is only called after all the dependencies have been populated.
+
+        | Container started | --> | Bean Initialization | --> | Dependency injection | --> | Post Construct Method | --> | Bean is ready|
+
+## PreDestroy
+* The callback method that is executed just before the bean is destroyed.
+* The method having this annotation is called when the bean is in the process of being removed from the container. 
+* All cleanup stuff can be performed in this method
+* A method with the @PreDestroy annotation can be used to release resources or close a database connection.
+
+        | Container Shutdown | --> | Method with @Predestroy annotation | --> | Bean destroyed|
+
+## Lifecycle of prototype beans
+- Spring manages the entire lifecycle of singleton beans but it does not completely manage the lifecycle of prototype beans. 
+- This is because there might be a large number of prototype instances and the container can become overwhelmed keeping track of them.
+- The Spring container creates the prototype beans and hands them over when requested. Thereafter, it is the responsibility of the application to destroy the bean and free up any resources that it has acquired.
+
+# Contexts and Dependency Injection Framework
+- Contexts and Dependency Injection (CDI) is an interface that standardizes dependency injection for Java.
+- It defines different annotations like @Named, @Inject, @Scope, @Singleton, etc., that are used for injecting dependencies in beans.
+- @Named is used to define a bean,
+- @Inject is used for autowiring one bean into another
+- The comparable Spring annotations are @Component and @Autowired
+- Different CDI implementation frameworks provide support and functionality for these annotations. Spring supports most of the annotations defined by CDI.
+  * To be able to use CDI annotations in our Spring application, we need to add a dependency in the pom.xml file below the spring-boot-starter dependency as follows:
+
+        <dependency>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
+            <version>1</version>
+        </dependency>
+    
+  ### @Named and @Inject
+  * The comparable Spring annotation for @Named is @Component, and for @Inject, it is @Autowired.
+  * This means we can replace the @Component from the RecommenderImplementation, ContentBasedFilter, and CollaborativeFilter classes and use @Named to declare components. In the same way, the Filter dependency declared using @Autowired can be declared using @Inject.
+  * Other annotations provided by CDI are @Qualifier, @Scope, and @Singleton. The @Qualifier annotation is similar to the one we have seen in Spring and is used to break ties if two beans of the same type qualify to be injected in a dependency.
+  * @Scope is used to set the scope of the bean, similar to the @Scope annotation in Spring. 
+  * The @Singleton annotation is used to explicitly set the scope to singleton in CDI annotation. In Spring, we can specify singleton scope using the @Scope annotation.
+
+* Both Spring and CDI annotations provide the same functionality. The only difference is that if the application is migrated to another framework, the CDI annotations can still be used, whereas Spring annotations are specific to a Spring API.
+* People often prefer CDI annotations because CDI is a Java EE standard.
+
+# Spring application configuration
+The Movie Recommender System we have used in this course was created using Spring Boot. Let’s look at how Spring can be run using its core features.
+
+## Spring-core dependency
+* spring-core provides the fundamental features of Spring framework like dependency injection and Inversion of Control.
+    - Since we created our application using Spring Initializr, it has the spring-boot-starter dependency in the pom.xml file. This dependency brings in Spring Boot functionality. In this lesson, we will replace it with spring-core.
+* spring-core defines the bean factory and forms the base of the Spring framework.
+
+## Spring-context dependency
+* To be able to use ApplicationContext, we need to add another dependency called spring-context as follows:
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
+
+* By removing the spring-boot-starter dependency, the @SpringBootApplication annotation will no longer be available when we run the Java application.
+
+## @Configuration
+* @SpringBootApplication cannot be used in the Java application file anymore as we have replaced the spring-boot-starter dependency with spring-core in step 1. This annotation defined the application configuration in Spring Boot. In the Java realm, we use @Configuration and import the org.springframework.context.annotation.Configuration jar.
+
+## AnnotationConfigApplicationContext 
+* If we run the application now, the following compilation error is encountered:
+
+        Unresolved compilation problem: SpringApplication cannot be resolved.
+
+* The SpringApplication class creates the application context. It belongs to the org.springframework-boot package. When using the spring-core, the application context is created using AnnotationConfigApplicationContext class as follows:
+
+## @ComponentScan
+- If we try to run the application now, it throws the NoSuchBeanDefinition exception, which means that the application context is unable to locate beans declared using @Component. We need to help it in component scanning by providing the @ComponentScan annotation on the MovieRecommenderSystemApplication class.
+
+* The @SpringBootApplication annotation performs multiple tasks. Now that it has been removed, we need to include the @ComponentScan annotation to guide Spring to the package which contains the beans.
+After making these changes, we are able to run the same application without using Spring Boot!
+
+## Closing the application context 
+- Spring Boot automatically closes the application context in the end, but for now we need to explicitly close the context as follows:
+
+        //close the application context
+        appContext.close();
+
+* Another way is to use a try catch block around the statement creating appContext. In this way, any error will result in the context being automatically closed.
+
+        try( AnnotationConfigApplicationContext appContext =
+        new AnnotationConfigApplicationContext(MovieRecommenderSystemApplication.class)) {
+        //...
+        }
+
+### The changes that we made in this step that enabled us to run a Spring Boot application as a basic Spring application are as follows:
+* Removing the spring-boot starter dependency and replacing it with spring-core and spring-context.
+* Replacing @SpringBootApplication with @Configuration and @ComponentScan.
+* Replacing the SpringApplication class with the AnnotationConfigApplicationContext class.
+
+# XML Application Configuration
+## XML configuration file 
+- The first step is creating an XML file that contains the bean definitions. Spring will read this file and know which beans to create and manage. We will create this file in src/main/resources and call it appContext.xml
+- we need to provide some metadata for validating the tags which will be used in this file. The metadata defines the schema location of the tags as follows:
+
+        <beans xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.springframework.org/schema/beans                    
+        http://www.springframework.org/schema/beans/spring-beans.xsd">
+        
+        <!-- bean definitions -->
+        </beans>
+
+## Bean tag
+
+* We will define the beans inside this metadata using the <bean > </bean> tag. For every bean, we need to specify the fully-qualified class name as well as a reference id. The fully-qualified class name is the class name along with its package name. We used @Component at three places in our application. Now we will declare three beans as follows:
+
+* The IOC container will read the appContext.xml file and create objects of the classes mentioned in it. It will call the constructor of the class to create the object by giving it the name that we specified as the id.
+
+        <bean id="contentBasedFilter" class="com.gn.springbasics.mrs.exp14.ContentBasedFilter"> </bean > 
+                                |                                    ______/
+                                |       Above line translate to     |
+                                V                                   V
+        ContentBasedFilter contentBasedFiler = new ContentBasedFilter();
+
+
+* After reading appContext.xml file, the IOC container creates the beans defined in xml.
+
+## ClassPathXmlApplicationContext 
+* To run the application, we need to create the application context using ClassPathXmlApplicationContext and provide the name of the xml config file as an argument:
+        
+        ClassPathXmlApplicationContext appContext = new ClassPathXmlApplicationContext("appContext.xml");
+
+* Once the context is loaded, we can check which beans have been loaded using the getBeanDefinitionNames method:
+
+        System.out.println(Arrays.toString(appContext.getBeanDefinitionNames()));
+
+* After the beans have been successfully loaded, we can retrieve them by using the getBeans method. We will give the name of the bean along with the class to which it belongs:
+
+        RecommenderImplementation recommender = appContext.getBean("recommenderImplementation", RecommenderImplementation.class);
+
+
+## Dependency injection
+
+* In our application, Filter is a dependency of RecommenderImplementation. To define this dependency, we can use constructor injection and modify the bean tag created in step 2 as follows:
+
+        <bean id="recommenderImplementation" class="com.gn.springbasics.mrs.exp14.RecommenderImplementation">
+            <constructor-arg ref="collaborativeFilter"/>
+        </bean>
+
+* This tells Spring to pass a bean called collaborativeFilter as a constructor argument when creating the recommenderImplementation object. We can change the name of the argument to autowire contentBasedFilter as well.
+
+## Closing the context 
+* he last step is to close the context just like we did in the previous lesson.
+
+        appContext.close();
+

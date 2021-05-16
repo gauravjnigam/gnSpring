@@ -1,0 +1,18 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!-- bean definitions -->
+
+    <bean id="collaborativeFilter" class="com.gn.springbasics.mrs.exp14.CollaborativeFilter"></bean>
+   <!-- <bean id="movie" class="com.gn.springbasics.mrs.exp14.Movie"></bean>-->
+
+<!--    <bean id="contentBasedFilter" class="com.gn.springbasics.mrs.exp14.ContentBasedFilter">-->
+<!--        <constructor-arg ref="movie"/>-->
+<!--    </bean>-->
+
+    <bean id="recommenderImplementation" class="com.gn.springbasics.mrs.exp14.RecommenderImplementation">
+        <constructor-arg ref="collaborativeFilter"/>
+    </bean>
+</beans>

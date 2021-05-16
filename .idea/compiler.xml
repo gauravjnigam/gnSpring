@@ -6,17 +6,22 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="movie-recommended-system-spring-core" />
         <module name="movie-recommender-system" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="gnSpring" target="1.8" />
+      <module name="movie-recommended-system-spring-core" target="1.8" />
       <module name="movie-recommender-system" target="1.8" />
+      <module name="movie-recommender-system-spring-xml" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="movie-recommended-system-spring-core" options="-parameters" />
       <module name="movie-recommender-system" options="-parameters" />
+      <module name="movie-recommender-system-spring-xml" options="-parameters" />
     </option>
   </component>
 </project>

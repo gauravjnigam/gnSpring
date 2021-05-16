@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/gnSpring.iml" filepath="$PROJECT_DIR$/gnSpring.iml" />
+      <module fileurl="file://$PROJECT_DIR$/movie-recommended-system-spring-core/movie-recommended-system-spring-core.iml" filepath="$PROJECT_DIR$/movie-recommended-system-spring-core/movie-recommended-system-spring-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/movie-recommender-system/movie-recommender-system.iml" filepath="$PROJECT_DIR$/movie-recommender-system/movie-recommender-system.iml" />
     </modules>
   </component>
