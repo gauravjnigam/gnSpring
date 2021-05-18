@@ -830,3 +830,86 @@ For that, we need to trigger a component scan on the package. We can define a co
 * By default, Spring will scan everything marked with @Component as well as the @Controller, @Repository, and @Service annotation. 
 * We have turned off the default behaviour by using use-default-filters="false". Next, the include-filter is used with a REGEX expression that will only match the Movie class.
 
+# Stereotype Annotations
+
+* Different annotations that can be used in place of the generic @Component annotation and their usage.
+
+* We have used the @Component annotation to define beans. In the lesson on XML configuration, we declared beans using the <bean> tag. But there are other ways to define beans. We will look at some of them
+
+* Beans can be declared using the @Bean annotation in a configuration class or by using the @Controller, @Service, and @Repository annotations. These annotations are used at different layers of an enterprise application
+
+                    Typical Application layering
+                -----------------------------------
+                |       WEB Interface             |
+                -----------------------------------
+                            |       ^
+                            V       |
+                -----------------------------------
+                |      Service Interface          | 
+                |      Service Implementation     |
+                -----------------------------------
+                            |       ^
+                            V       |
+                -----------------------------------
+                |       DAO Interface             |  
+                |       DAO Implementation        | 
+                -----------------------------------
+                            |       ^
+                            V       |
+                        ----------------
+                        |   Database   |
+                        ----------------
+
+
+* The web or UI layer interacts with the client program, the business layer takes care of the business logic, and the data layer interacts with a database or an external interface. @Component is a generic annotation. It can be used in any layer if the developer is unsure about where the bean belongs. The other three annotations, @Controller, @Service, and @Repository, are specific to layers.
+
+![img.png](docs/stereotype_annotation.png)
+
+
+## @Controller
+- @Controller is used to define a controller in the web layer.
+- Spring scans a class with @Controller to find methods that are mapped to different HTTP requests.
+- @RestController is a specialized form of @Controller
+
+## @Service
+- @Service is used in the business layer for objects that define the business logic. It marks a class as a service provider.
+
+## @Repository
+* @Respository is used in the data layer to encapsulate storage, retrieval, and search in a typical database.
+* This annotation can also be used for other external sources of data.
+
+
+We can have a RecommendationController class marked with @Controller that calls the classes in the business layer. Likewise, we should also have a User class marked with @Repository to hold the user watch history and movie preference data for our recommender system.
+
+![img.png](docs/layers-in-system.png)
+
+
+## Advantages 
+* The advantage of having annotations specific to every layer instead of the generic @Component is in Aspect Oriented Programming (AOP). We can identify the annotations and add functionality to specific annotations. Similarly, we can classify components in different categories and apply a specific logic to each category. For example, if we want to log everything that is coming from the business layer, we can identify objects with the @Service annotation using AOP and log all the content.
+  
+* The @Controller, @Service, and @Repository annotations are similar to @Component annotation with respect to bean creation and dependency injection except that they provide specialized functionality.
+
+* Spring provides a default exception translation facility for JDBC exceptions if the @Repository annotation is used. This feature cannot be used if @Component is used. When using a persistence framework like Hibernate, exceptions thrown in a class with the @Repository annotation are caught and automatically translated into Spring’s DataAccessException class. Likewise, the request mapping feature is enabled only when using the @Controller annotation. The DispatcherServlet automatically looks for @RequestMapping for classes marked with the @Controller annotation only.
+
+
+# Using an External Property File
+* Applications have a lot of configuration. Keeping the configuration separate from the code leads to clarity. If the property file is inside the jar when the application is built, it can't be changed later without having to un-compress the jar.
+* Spring provides a way to change configuration while the application jar remains intact.
+* The application configuration is different in different environments. Local machines are used in development, then the application moves to a test environment, and afterwards a production server is used.
+
+* Different configurations are used in different environments and the property file externalizes the values for each environment. For example, the database connection in the data layer might be different in different environments. The developer can create an application with default properties and deploy it. Then, if the values need to be changed, an external property file will do the trick. The values from the external property file outside the jar overwrite the values inside the jar.
+
+## application-properties file
+* The application-properties file is a text file that defines the key-value pair for a property.
+* The name of the property follows a convention where the class name is used with the property name to disambiguate properties with the same name in different classes.
+
+* We can dynamically fetch the value of any variable from the app.properties file.
+* To make sure that the value has been read from the file, we will create a public method that returns the value read.
+* We need to create a file called app.properties in src/main/resources and define a value for variable in it. 
+  Every line in this file can define a value for a property key using the = sign . As per convention, the fully-qualified name of the variable should be used.
+  
+        recommender.implementation.favoriteMovie = Finding Dory
+
+## @Value
+*  We can dynamically fetch the favoriteMovie value from the file using the @Value annotation.
+
