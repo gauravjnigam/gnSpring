@@ -1094,5 +1094,157 @@ This pointcut will match method calls having one parameter of String type. We ca
 ### Combining pointcut expressions
 * The && , || and ! symbols can be used to combine different pointcut expressions.
 
-        @Before("execution(* io.datajek.springaop.movierecommenderaop..*.*Filtering(..)) 
-        || execution(String io.datajek.springaop.movierecommenderaop..*.*(..))")
+        @Before("execution(* com.gn.springbasics.mrs.service..*.*Filtering(..)) 
+        || execution(String com.gn.springbasics.mrs.service..*.*(..))")
+
+## After Aspect
+Logging is a cross-cutting concern for which aspects can be created. In this lesson, we will create another aspect that will log the values returned after the methods have been executed.
+
+* We will create an aspect called LoggingAspect by creating a Java class and mark it with @Aspect and @Configuration annotations.
+
+        @Aspect
+        @Configuration
+        public class LoggingAspect {
+        
+        }
+
+### @AfterReturning
+* The LoggingAspect class will have a method LogAfterExecution, which will print a message if the method is successfully executed.
+
+* To tell spring-aop that this method needs to be called after the intercepted method call is executed, we will use the @AfterReturning annotation.
+
+        @AfterReturning("execution(* com.gn.springbasics.mrs.model.*.*(..))")
+            public void LogAfterExecution(JoinPoint joinPoint) {
+            logger.info("Method {} complete", joinPoint);
+        }
+
+* We can get the return values of the method here by using the returning tag. Now that pointcut is not the only argument in the @AfterReturning annotation, we will use tags to differentiate arguments as follows:
+
+        @AfterReturning(
+        value = "execution(* com.gn.springbasics.mrs.service.*.*(..))",
+        returning = "result")
+            public void LogAfterExecution(JoinPoint joinPoint, Object result) {
+            logger.info("Method {} returned with: {}", joinPoint, result);
+        }
+
+* value contains the pointcut expression 
+* returning contains the value that is returned by the executing method, which is stored in result and passed to the LogAfterExecution method.
+* Note that result is of type Object because different methods will have different return types.
+
+### @AfterThrowing 
+* To intercept an exception, another annotation, @AfterThrowing, is used. We can get the result of the exception using the throwing tag.
+* We will use this pointcut on a method called LogAfterException as follows:
+
+        @AfterThrowing(
+        value = "execution(* com.gn.springbasics.mrs.service.*.*(..))",
+        throwing = "exception")
+            public void LogAfterException(JoinPoint joinPoint, Object exception) {
+            logger.info("Method {} returned with: {}", joinPoint, exception);
+        }
+
+### After
+
+* The @After annotation is a generic annotation that is used in both scenarios, whether the method execution is successful or results in an exception. The method LogAfterMethod demonstrates the use of this annotation.
+
+        @After("execution(* com.gn.springbasics.mrs.service.*.*(..))")
+            public void LogAfterMethod(JoinPoint joinPoint) {
+            logger.info("After method call {}", joinPoint);
+        }
+
+* Since @After is a generic annotation, if the application is run, this method also gets executed alongside the LogAfterExecution method marked with the @AfterReturning annotation.
+
+
+## Around Aspect
+* This is executed around the intercepted method call.
+* This kind of aspect is useful if we want to perform a task before the intercepted method starts execution and after the method has returned.
+
+* A good example of an around aspect is measuring the time taken by the method call to execute. We can note the time when the method call is intercepted, then allow the intercepted method to execute, and note the time after the method returns. Instead of having two separate annotations, @Before and @After, we can accomplish this task using the more advanced @Around annotation.
+
+* We will create a class called TimerAspect. To mark it as an aspect and a configuration, we will use the @Aspect and @Configuration annotations as follows:
+
+        @Aspect
+        @Configuration
+        public class TimerAspect {
+        
+        }
+
+* we will create a method called calculateExecutionTime.
+* The parameter type of this method will be ProceedingJoinPoint instead of JoinPoint, which we have used with methods marked with @Before and @After annotations.
+* ProceedingJoinPoint allows the continuation of the execution. 
+* This method will return an Object that contains the values returned after the execution of the intercepted method call. The proceed method of ProceedingJoinPoint should either be surrounded by a Try Catch block or should include a throws declaration with the method definition.
+
+1. We will create a class called ExecutionTimeAspect. To mark it as an aspect and a configuration, we will use the @Aspect and @Configuration annotations as follows:
+
+        @Aspect
+        @Configuration
+        public class ExecutionTimeAspect {
+        
+        }
+
+2. In the ExecutionTimeAspect class, we will create a method called calculateExecutionTime. The parameter type of this method will be ProceedingJoinPoint instead of JoinPoint, which we have used with methods marked with @Before and @After annotations.
+3. ProceedingJoinPoint allows the continuation of the execution. This method will return an Object that contains the values returned after the execution of the intercepted method call. The proceed method of ProceedingJoinPoint should either be surrounded by a Try Catch block or should include a throws declaration with the method definition.
+4. We will use the @Around annotation to define a pointcut for method calls for which we want the execution time to be tracked. If we want the time of all methods to be tracked, the following pointcut expression will be used:
+           
+        @Aspect
+        @Configuration
+        public class TimerAspect {
+
+            public static final Logger logger = LoggerFactory.getLogger(TimerAspect.class);
+        
+            @Around("execution(* com.gn.springbasics.mrs.service.*.*(..))")
+            public Object calculateExecutionTime(ProceedingJoinPoint joinPoint) {
+                StopWatch stopWatch = new StopWatch();
+                Object returnValue = null;
+                try {
+                    stopWatch.start();
+                    returnValue = joinPoint.proceed();
+                    stopWatch.stop();
+                } catch (Throwable throwable) {
+                    throwable.printStackTrace();
+                }
+        
+                logger.info("Time taken by {} to complete is : {}", joinPoint, stopWatch.getTotalTimeMillis());
+                return returnValue;
+        
+            }
+        }
+
+# JoinPoint Configuration File
+* A best practice related to AOP is to have a separate configuration file that defines all the pointcuts. This way, all the pointcut definitions will be in one place. Hence they will be easy to manage. We can then use the definitions in any aspect.
+
+## For a specific layer
+* We will create a class called JoinPointConfig and define pointcuts using the @pointcut annotation. This annotation will be used on an empty method as follows:
+
+        @Pointcut("execution(* com.gn.springbasics.mrs.model.*.*(..))")
+        public void dataLayerPointcut() {}
+
+* Now, we can use the modelPointcut method by providing its fully qualified name wherever we want to intercept execution of methods in the model.
+* we will use the method that defines this pointcut in the configuration file as follows:
+
+        // Earlier 
+        @AfterReturning("execution(* com.gn.springbasics.mrs.model.*.*(..))")
+            public void logAfterExecution(JoinPoint joinPoint) {
+            logger.info("Method {} complete", joinPoint);
+        }     
+
+        // Now
+         @AfterReturning("com.gn.springbasics.mrs.configuration.JoinPointConfig.modelPointcut")
+        public void logAfterExecution(JoinPoint joinPoint) {
+            //...
+        }
+
+## For multiple layers
+* We can also combine pointcuts using the AND (&&), (OR) ||, and (NOT) ! operators. The method allLayerPointcut will intercept calls belonging to either the business layer or the data layer.
+
+        @Pointcut("com.gn.springbasics.mrs.configuration.JoinPointConfig.dataLayerPointcut() || "
+        + "com.gn.springbasics.mrs.configuration.JoinPointConfig.businessLayerPointcut()")
+        public void allLayersPointcut() {}
+
+
+## For specific bean
+* We can also define a pointcut to intercept calls belonging to a particular bean. Say we want to log the execution of all methods belonging to beans that have the word Movie in their name. We can define a pointcut as follows:
+
+        @Pointcut("bean(movie*)")
+        public void movieBeanPointcut() {}
+
+## Defining a Custom Annotation for Aspects

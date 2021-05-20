@@ -11,6 +11,11 @@ public class FilteringTechnique1 {
     private Movie movie;
 
     public String contentBasedFiltering() {
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         String movieDetails = movie.getMovieDetails();
         return movieDetails;
     }

@@ -18,9 +18,10 @@ public class AccessCheckAspect {
     //@Before("execution(* com.gn.springbasics.mrs.service.*.*Filtering(..))")
     //@Before("execution(* com.gn.springbasics.mrs.service.*.*(String,..))")
     //@Before("execution(* com.gn.springbasics.mrs.service.*.*(String))")
-    @Before("execution(* com.gn.springbasics.mrs.service.*.*(String)) || execution(* com.gn.springbasics.mrs.service.*.*Filtering(..))")
+    //@Before("execution(* com.gn.springbasics.mrs.service.*.*(String)) || execution(* com.gn.springbasics.mrs.service.*.*Filtering(..))")
+    @Before("com.gn.springbasics.mrs.configuration.JoinPointConfig.allLayersPointcut()")
     public void before(JoinPoint joinPoint) {
-        logger.info("Intercepted call before execution of: {}", joinPoint);
+        logger.info("[UsingJoinPointConfig] Intercepted call before execution of: {}", joinPoint);
     }
 
 }

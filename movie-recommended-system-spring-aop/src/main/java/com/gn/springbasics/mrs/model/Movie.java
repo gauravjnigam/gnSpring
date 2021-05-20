@@ -6,6 +6,6 @@ import org.springframework.stereotype.Repository;
 public class Movie {
 
     public String getMovieDetails() {
-        return "movie details";
+        return "movie details - 1";
     }
 }

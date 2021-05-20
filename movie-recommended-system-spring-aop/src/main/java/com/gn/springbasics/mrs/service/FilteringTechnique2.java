@@ -11,7 +11,11 @@ public class FilteringTechnique2 {
     private User user;
 
     public String collaborativeFiltering() {
-
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
         String userDetails =  user.getUserDetails();
         return userDetails;
     }
