@@ -942,6 +942,157 @@ For example, we may want to print logs of methods that provide a certain feature
 * spring-aop is a popular implementation of AOP provided by Spring. It is not as powerful as AspectJ
 * spring-aop can be used to intercept any calls to the beans managed by Spring
 * Once method calls are intercepted, cross-cutting concerns can be applied before, after, or around the method logic.
-* 
 
-* 
+
+## Terminology 
+### Aspect
+* An aspect is a Java class that implements cross-cutting concerns
+* The @Aspect annotation is used to define a class as an aspect.
+* An aspect is a combination of the kinds of methods to intercept and what to do after intercepting them.
+* Aspects can define functionality for any concern like logging, performance management, or transaction management that cuts across multiple application layers.
+
+### Pointcut
+* Pointcuts are expressions that determine which method calls will be intercepted.
+* These expressions determine whether an advice needs to be executed or not.
+* Pointcuts are defined following a particular syntax.
+* Pointcuts should be carefully defined, as they determine how many calls will be intercepted.
+
+### Advice
+* The tasks performed after intercepting a method call are called advices.
+* It is the logic of the methods in a class marked with @Aspect.
+* Advices are basically the methods that get executed when a method calls meets a pointcut.
+* These methods can get executed before, around the time of, or after the execution of the intercepted method call. 
+* There are different advice types as shown below.
+
+                                            AOP Advice
+          -----------------------------------------------------------------------
+          |              |              |                   |                   | 
+        Before          After     After Returning       After Throwing        Around
+
+
+### JoinPoint
+* All method calls that are intercepted are joinpoints.
+* It is a point in the program execution where an aspect can be plugged in.
+* It contains the name of the intercepted method call
+* The following figure shows the big picture of how AOP works:
+
+![img.png](docs/spring-aop.png)
+Pointcut maps to a joinpoint where an aspect can be executed during program execution
+
+### Weaving
+* The process of implementing AOP around method calls is called weaving
+* Weaving links an aspect with objects in the application to create an advised object.
+* The aspect is called at the right moment. For example, if we are tracking the execution time of some methods in our application, the weaving process will be like this:
+
+           ------------------          ------------------------ 
+             Business Logic              Tracking time concern  
+           ------------------          ------------------------
+                            \            /
+                             \          /
+                        -----------------------
+                         Tracking time concern    
+                        =======================
+        
+                            Business Logic
+                        
+                        ========================
+                          Tracking time concern 
+                        ------------------------
+
+                Implementing aspects around business logic
+### Weaver
+* The framework that ensures that an aspect is invoked at the right time is called a weaver.
+
+## Defining an Aspect
+We can define an aspect to intercept all the calls to the business layer and log their output. 
+When we intercept method calls, we have the option to perform tasks before the method is executed as well as afterwards. To define an aspect for a cross-cutting concern, we will perform the following steps:
+* Define an Aspect class
+* Write methods containing the advice to be executed when method calls are intercepted. 
+* write pointcut expression for intercepting method calls
+
+### Aspect
+* To establish that this is a configuration class, we will use the @Configuration annotation. 
+* We will also add the @Aspect annotation to establish that this class is related to AOP.
+
+        @Aspect
+        @Configuration
+        public class AccessCheckAspect {
+        
+        }
+
+### Advice
+* define a method that contains the logic of the steps that need to be carried out when a method call gets intercepted
+
+        @Aspect
+        @Configuration
+        public class AccessCheckAspect {
+        private Logger logger = LoggerFactory.getLogger(this.getClass());
+        
+            public void userAccess(JoinPoint joinPoint) {
+                logger.info("Intercepted method call");
+            }
+        }
+
+### Pointcut expression 
+* if User access needs to be checked before a method gets executed. We need the @Before annotation on our method. It ensures that the advice is run before the method is executed.
+
+* @Before needs an argument which specifies the method calls that will be intercepted. This is called the pointcut. Pointcuts are defined in the following format:
+
+        execution(* PACKAGE.*.*(..))
+
+The pointcut expression starts with a key word called a designator, which tells Spring AOP what to match. execution is the primary designator which matches method execution joinpoints.
+* The first * in the expression corresponds to the return type. * means any return type.
+* Then comes the package name followed by class and method names.
+* The first * after package means any class and the second * means any method. Instead of *, we could specify the class name and method name to make the pointcut expression specific.
+* Lastly, parentheses correspond to arguments. (..) means any kind of argument.
+
+Suppose we want to intercept calls to methods belonging to the business package. The pointcut expression, in this case, will be:
+
+        @Before("execution(* com.gn.springbasics.mrs.business.*.*(..))")
+
+* If we use this pointcut expression and run the application, the message in the method will be printed twice, indicating that two method calls have been intercepted.
+* The pointcut that we defined is applicable on all methods in the business layer.
+
+## Pointcut expression
+* The way pointcuts are defined is important because it decides the method calls that will be intercepted
+*  If we have two packages, we can define which method calls will be intercepted.
+
+### Intercepting all method calls in a package
+* as per below pointcut expression -
+  
+          @Before("execution(* com.gn.springbasics.mrs.business.*.*(..))")
+          public void before(JoinPoint joinPoint) {
+              //intercept a call
+              logger.info("Intercepted call before execution of: {}", joinPoint);
+            
+              //access check logic        
+          }
+
+* This pointcut intercepted calls belonging to the business package. Since we used * in place of the class and method names, all calls to methods in the business package were intercepted. If we change the package from business to data, only calls to methods in the data package will be intercepted.
+
+### Intercepting calls using return type
+* Say we want to intercept calls to all methods that return a String value. This can be done by specifying String as the return type in the pointcut expression as follows:
+
+        @Before("execution(String com.gn.springbasics.mrs.service..*.*(..))")
+
+### Intercepting calls to a specific method
+* If we want to intercept calls to all methods that have the word Filtering in it, we will use the following pointcut expression:
+  
+        @Before("execution(String com.gn.springbasics.mrs.service..*.*Filtering(..))")
+  
+The wildcard * used in place of the method name will match all methods that have the word Filtering in it. Calls to contentBasedFiltering() and collaborativeFiltering() will be intercepted. If we change the word Filtering to Filter, no method calls will match our criterion.
+
+### Intercepting calls with specific method arguments
+* Consider the following pointcut expression:
+
+        @Before("execution(* com.gn.springbasics.mrs.service..*.*(String))")
+
+This pointcut will match method calls having one parameter of String type. We can modify this expression to match all method calls with String as the first argument as follows:
+
+        @Before("execution(* com.gn.springbasics.mrs.service..*.*(String,..))")
+
+### Combining pointcut expressions
+* The && , || and ! symbols can be used to combine different pointcut expressions.
+
+        @Before("execution(* io.datajek.springaop.movierecommenderaop..*.*Filtering(..)) 
+        || execution(String io.datajek.springaop.movierecommenderaop..*.*(..))")
